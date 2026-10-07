@@ -105,7 +105,7 @@ Docker Compose defines and runs multi-container applications from a single YAML 
 This repo includes:
 
 - [js-app/docker-compose.yaml](./js-app/docker-compose.yaml) — MongoDB, **named volume** `mongo-data`, and **mongo-express** (UI on host port **8081** per the file).
-- [js-app/mongo.yaml](./js-app/mongo.yaml) — example including a tagged **custom app image**; replace the image reference with your own registry host and tag when you deploy.
+- [js-app/mongo.yaml](./js-app/app/mongo.yaml) — example including a tagged **custom app image**; replace the image reference with your own registry host and tag when you deploy.
 
 Start the stack from `js-app`:
 
