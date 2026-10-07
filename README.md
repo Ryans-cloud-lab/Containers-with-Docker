@@ -86,3 +86,104 @@ docker stop mongodb
 ```
 
 ---
+### Port Mapping
+- **Container port:** the port the process listens on inside the container. 
+- **Host port:** the port opened on my machine (or server) that clients connect to.
+- ###### Example: -p 3001:3000 forwards host port 3001 to container port 3000.
+
+##### Workflow with Docker
+
+A typical flow is: write code → write a Dockerfile → docker build to produce an image → docker tag and docker push to a registry → pull and docker run (or docker compose up) on a laptop or server. In CI/CD, a pipeline automates the build, tag and push stages, so every environment runs the same versioned artifact.
+
+### Docker Compose
+
+Docker Compose defines and runs multi-container applications from a single YAML file.
+
+- Services, ports, environment variables, volumes and dependencies are declared in one version-controlled file, which is easier to maintain and review than long docker run commands. 
+- Compose automatically creates a default network for the services in the file, so containers resolve each other by service name without --net. depends_on controls start order only, not readiness. Mongo Express can start before MongoDB accepts connections, which is why restart: always is set on it.
+
+This repo includes:
+
+- [js-app/docker-compose.yaml](./js-app/docker-compose.yaml) — MongoDB, **named volume** `mongo-data`, and **mongo-express** (UI on host port **8081** per the file).
+- [js-app/mongo.yaml](./js-app/mongo.yaml) — example including a tagged **custom app image**; replace the image reference with your own registry host and tag when you deploy.
+
+Start the stack from `js-app`:
+
+```bash
+cd js-app
+docker-compose -f docker-compose.yaml up -d
+```
+
+Docker Compose V2 also accepts `docker compose` (with a space) if your Docker CLI includes the plugin. Use `docker-compose down` (or `docker compose down`) to stop and remove containers (volumes persist unless you remove them explicitly).
+
+## Dockerfile
+
+A Dockerfile is a set of instructions that docker build uses to create an image. Each instruction creates a layer, and unchanged layers are reused from cache to speed up rebuilds.
+
+- **Build context:** the directory you pass at the end of `docker build` (often `.`). Only copy what you need; use a **`.dockerignore`** to exclude build artifacts and secrets.
+- **Base image:** most Dockerfiles start `FROM` an existing image (for example `node:20-alpine` in [js-app/Dockerfile](./js-app/Dockerfile)).
+
+Build the sample image from `js-app` (the trailing `.` is the context path):
+
+```bash
+cd js-app
+docker build -t my-app:1.0 .
+```
+
+In CI/CD, the same Dockerfile usually builds the image artifact that is then **pushed** to a registry and **pulled** on servers or developer laptops.
+
+### Private registries and image references
+
+Working with a **private** registry (for example **AWS ECR**, **Azure Container Registry**, or a registry hosted on **Nexus**) usually follows:
+
+1. **`docker login`** to the registry (authenticate).
+2. **`docker tag`** so the image name includes **`registryDomain/imageName:tag`**.
+3. **`docker push`** to upload the image.
+
+**Default registry:** if you omit a registry host, Docker assumes **`docker.io`** (Docker Hub). For example:
+
+```bash
+docker pull mongo:4.2
+```
+
+is equivalent to pulling from Docker Hub’s library namespace. For a private registry you must include the host (and port if non-default), for example:
+
+```text
+165.245.222.56:8083/my-app:1.0
+```
+
+### Deploy Docker containers on a remote server
+
+On a deployment host, Compose typically pulls a mix of:
+
+- Public images (for example MongoDB and Mongo Express from Docker Hub). 
+- Private images (the application, built and pushed to a private registry).
+
+The server needs Docker, network access to the registry (docker login first), firewall rules for the published host ports, and an image built for its CPU architecture.
+
+### Docker volumes
+
+By default, data written inside a container lives in its writable layer and is lost when the container is removed. Volumes store data outside the container's lifecycle.
+
+- **Host volume:** you choose the host path, e.g. `-v /home/mount/data:/var/lib/mysql/data`.
+- **Anonymous volume:** Docker picks a directory under `/var/lib/docker/volumes/…`.
+- **Named volume:** Docker manages storage under a **name** you choose—good for **production** and Compose (`volumes:` in YAML).
+
+Named volume example from [js-app/docker-compose.yaml](./js-app/docker-compose.yaml):
+
+```yaml
+volumes:
+  mongo-data:
+    driver: local
+```
+
+I used a named volume, mounted at MongoDB's data directory, so the database survives the stack being recreated
+
+### Docker best practices (security and maintainability)
+
+- Use official or trusted base images, and pin specific tags (not latest) for reproducible builds.
+- Prefer minimal base images (for example Alpine) to reduce image size and attack surface.
+- Order Dockerfile instructions for layer caching: copy package*.json and install dependencies before copying source code.
+- Use a .dockerignore to keep node_modules, .git and secrets out of the build context. U
+- se multi-stage builds to keep build tools out of the final image.
+- Run the container as a non-root user (USER node in Node images). 
