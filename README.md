@@ -19,11 +19,11 @@
 
 ###### What is Docker? What is a container?
 
-Docker is an open-source containerisation platform. It packages an application together with its dependencies, runtime and configuration into a single portable, standardised artifact (an image) that runs the same way in development, testing and production. Containers existed before Docker (for example Linux namespaces, cgroups and LXC) however Docker made the workflow accessible and mainstream.
+**Docker** is an open-source containerisation platform. It packages an application together with its dependencies, runtime and configuration into a single portable, standardised artifact (an image) that runs the same way in development, testing and production. Containers existed before Docker (for example Linux namespaces, cgroups and LXC) however Docker made the workflow accessible and mainstream.
 
 ###### Container registries
 
-Container images are stored in container registries. Registries can be public (for example Docker Hub) or private (for example AWS ECR, Azure Container Registry or a Nexus Docker repository) for company-internal images. Images are pulled to be run and pushed so that other environments, teams or servers can consume the exact same artifact.
+**Container** images are stored in container registries. Registries can be public (for example Docker Hub) or private (for example AWS ECR, Azure Container Registry or a Nexus Docker repository) for company-internal images. Images are pulled to be run and pushed so that other environments, teams or servers can consume the exact same artifact.
 
 ###### Docker image vs Docker container
 
@@ -118,7 +118,7 @@ Docker Compose V2 also accepts `docker compose` (with a space) if your Docker CL
 
 ## Dockerfile
 
-A Dockerfile is a set of instructions that docker build uses to create an image. Each instruction creates a layer, and unchanged layers are reused from cache to speed up rebuilds.
+**A Dockerfile** is a set of instructions that docker build uses to create an image. Each instruction creates a layer, and unchanged layers are reused from cache to speed up rebuilds.
 
 - **Build context:** the directory you pass at the end of `docker build` (often `.`). Only copy what you need; use a **`.dockerignore`** to exclude build artifacts and secrets.
 - **Base image:** most Dockerfiles start `FROM` an existing image (for example `node:20-alpine` in [js-app/Dockerfile](./js-app/Dockerfile)).
@@ -186,4 +186,8 @@ I used a named volume, mounted at MongoDB's data directory, so the database surv
 - Order Dockerfile instructions for layer caching: copy package*.json and install dependencies before copying source code.
 - Use a .dockerignore to keep node_modules, .git and secrets out of the build context. U
 - se multi-stage builds to keep build tools out of the final image.
-- Run the container as a non-root user (USER node in Node images). 
+- Run the container as a non-root user (USER node in Node images).
+
+---
+### References
+- DigitalOcean: [Droplets](https://docs.digitalocean.com/products/droplets/), [Cloud Firewalls](https://docs.digitalocean.com/networking/firewalls/)
